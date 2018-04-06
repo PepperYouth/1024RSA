@@ -134,10 +134,8 @@ int Miler_Rabin(_u8 *n, int s) {
 }
 _u8 *MRFakePrime(){
 	_u8 *X = FakePrime();
-	int i = 0;
 	while (Miler_Rabin(X, 19)) {
 		X = FakePrime();
-		i++;
 	}
 	return X;
 }
