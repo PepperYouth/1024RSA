@@ -54,6 +54,8 @@ int PrintPM(_u8 **P_M) {
 }
 int DelZero(_u8 *X) {
 	for (int i = X->len-1; i >= 0; i--) {
+		if (X->len == 1)
+			return 0;
 		if (X->data[i] == 0)
 			X->len--;
 		else
@@ -177,6 +179,29 @@ _u8 *imirPefaFRM(_u8 *X) {
 	return Y;
 }
 
+_u8 *Add(_u8 *A, _u8 *B){
+	//Be sure that A->len >= B->len
+	_u8 *C = Ini(A->len + 1);
+	int i, j = 0, carry = 0;
+	unsigned int temp;
+
+	for (i = 0; i < B->len; i++){
+		temp = A->data[i] + B->data[i] + carry;
+		C->data[i] = temp % 256;
+		carry = temp / 256;
+	}
+	for (; i < A->len; i++){
+
+		temp = A->data[i] + carry;
+		C->data[i] = temp % 256;
+		carry = temp / 256;
+	}
+	if (carry != 0)
+		C->data[i] = carry;
+	else
+		C->len -= 1;
+	return C;
+}
 _u8 *Sub(_u8 *A, _u8 *B){
 	//A > B; A - B = R;
 	int i, j = 0;
@@ -286,7 +311,104 @@ _u8 *Mod(_u8* A, _u8* B){
 	DelZero(C);
 	return C;
 }
+_u8 *Div(_u8 *A, _u8*B){
+	//A/B
+	DelZero(A);
+	DelZero(B);
+	if (A->len < B->len) {
+		_u8 *Temp = Ini(1);
+		Temp->data[0] = 0;
+		return Temp;
+	}
+	_u8 *C, *mB, *temp, *result, *one, *tresult;
+	int i, j, count;
+	int Cfirst = A->len - 1, Bfirst = B->len - 1;
+	printf("A: %d\n", A->len);
+	Print(A);
+	printf("B: %d\n", B->len);
+	Print(B);
+	putchar('\n');
+	C = Ini(A->len);
+	for (i = 0; i < C->len; i++)
+		C->data[i] = A->data[i];
+	result = Ini(A->len);
+	for (i = 0; i < result->len; i++)
+		result->data[i] = 0;
+	one = Ini(1);
+	one->data[0] = 1;
+	while (C->data[Cfirst--] == 0);
+	while (B->data[Bfirst--] == 0);
+	Cfirst++, Bfirst++;
+	while (Cfirst > Bfirst + 1) {
+		mB = Ini(Cfirst);
+		for (i = 0, j = 0; i < Cfirst; i++) {
+
+			if (i < Cfirst - 1 - Bfirst)
+				mB->data[i] = 0;
+			else {
+				mB->data[i] = B->data[j];
+				j++;
+			}
+		}
+		temp = mB;
+		mB = Mul(mB, C->data[i]);
+		destroy(temp);
+
+		tresult = Ini(Cfirst);
+		for (j = 0; j < tresult->len; j++)
+			tresult->data[j] = 0;
+		tresult->data[Cfirst - Bfirst - 1] = 1;
+
+		temp = tresult;
+		tresult = Mul(tresult, C->data[i]);
+		free(temp);
+
+		while (Compare(C, mB) != -1) {
+			temp = Sub(C, mB);
+			if (Compare(temp, B) == -1) {
+				destroy(temp);
+				break;
+			}
+			else {
+				destroy(C);
+				C = temp;
+			}
+
+			temp = result;
+			result = Add(result, tresult);
+			destroy(temp);
+
+
+		}
+		destroy(tresult);
+		while (C->data[Cfirst--] == 0);
+		Cfirst++;
+		destroy(mB);
+	}
+	while (Compare(C, B) == 1) {
+		temp = C;
+		C = Sub(C, B);
+		destroy(temp);
+		temp = result;
+		result = Add(result, one);
+		destroy(temp);
+	}
+	if (Compare(C, B) == 0) {
+		destroy(C);
+		C = Ini(1);
+		C->data[0] = 0;
+		temp = result;
+		result = Add(result, one);
+		destroy(temp);
+	}
+	return result;
+}
 _u8 *Multiplicate(_u8 *A, _u8 *B) {
+	if (EqualZero(A) || EqualZero(B)) {
+		_u8 *Temp = Ini(1);
+		Temp->data[0]=0;
+		return Temp;
+	}
 	int r = 0, carry = 0;
 	_u8 *R;
 	R = Ini(A->len + B->len);
@@ -377,25 +499,23 @@ _u8 **ExEuclid(_u8 *e, _u8 *fai) {
 	_u8 *Temp1, *Temp2;
 	_u8 **Rustle = (_u8 **)malloc(2 * sizeof(_u8 *));
 	if (EqualZero(fai)) {
-		Temp1 = Ini(1);
-		Temp1->data[0] = 1;
-		Temp2 = Ini(1);
-		Temp2->data[0] = 0;
-		Rustle[0] = Temp1;
-		Rustle[1] = Temp2;
+		Rustle[0] = Ini(1);
+		Rustle[0]->data[0] = 1;
+		Rustle[1] = Ini(1);
+		Rustle[1]->data[0] = 0;
 		return Rustle;
 	}
 	else {
 		Temp1 = Mod(e, fai);
 		Rustle = ExEuclid(fai, Temp1);
 		destroy(Temp1);
-		//Temp3 = Quotient(e, fai);
+		Temp1 = Div(e, fai);
 		Temp2 = Multiplicate(Temp1, Rustle[1]);
 		destroy(Temp1);
 		Temp1 = Sub(Rustle[0], Temp2);
 		destroy(Temp2);
 		Rustle[0] = Rustle[1];
-		Rustle[1] = Temp2;
+		Rustle[1] = Temp1;
 		return Rustle;
 	}
 }

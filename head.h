@@ -7,7 +7,7 @@
 #define TIME 3//检测次数
 typedef struct {
 	unsigned char *data;
-	int len;
+	unsigned int len;
 }_u8;
 typedef struct {
 	_u8 *u;
@@ -33,10 +33,12 @@ int PrintPM(_u8 **);//输出密文
 int DelZero(_u8 *);//消去高位的0
 void destroy(_u8 *);//销毁内存
 
+_u8 *Add(_u8 *, _u8 *);//大数加法
 _u8 *Sub(_u8 *, _u8 *);//大数减法
 factor *RightMove(_u8 *);//大数右移至最低位不为零
-int Compare(_u8* A, _u8* B);//比较
-_u8 *Mod(_u8* A, _u8* B);//模运算
+int Compare(_u8 * , _u8 *);//比较
+_u8 *Mod(_u8 *, _u8 *);//模运算
+_u8 *Div(_u8 *, _u8 *);//除，向下取整
 _u8 *Multiplicate(_u8 *, _u8 *);//大数乘法
 _u8 *Mul(_u8 *, unsigned char);//大数与小数乘法
 _u8 *ModExp(_u8 *, _u8 *, _u8 *);//模幂运算
