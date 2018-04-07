@@ -93,9 +93,8 @@ int F_P(_u8* X) {
 }
 _u8 *FakePrime() {
 	_u8 *X = Odd(32 + RealRand(64));
-	while (F_P(X)) {
+	while (F_P(X))
 		X = Odd(32 + RealRand(64));
-	}
 	return X;
 }
 _u8 *MR_rand(_u8 *N) {
@@ -109,15 +108,25 @@ _u8 *MR_rand(_u8 *N) {
 }
 int Witness(_u8 *a,_u8 *n) {
 	factor *R = RightMove(n);
-	_u8 *X = ModExp(a,R->u,n);
+	_u8 *X = ModExp(a, R->u, n);
 	_u8 *Y = Ini(X->len);
+	_u8 *Temp;
 	for (int i = 0; i < R->t; i++) {
-		Y = Mod(Multiplicate(X, X), n);
-		if (!NoEqualOne(Y) && NoEqualOne(X) && NoEqualN_1(X, n))
+		free(Y);
+		Temp = Multiplicate(X, X);
+		Y = Mod(Temp, n);
+		free(Temp);
+		if (!NoEqualOne(Y) && NoEqualOne(X) && NoEqualN_1(X, n)) {
+			free(X);
+			free(Y);
+			free(R);
 			return 1;
+		}
+		free(X);
 		DelZero(Y);
 		X = Y;
 	}
+	free(R);
 	if (NoEqualOne(Y))
 		return 1;
 	return 0;
@@ -127,8 +136,11 @@ int Miler_Rabin(_u8 *n, int s) {
 	for (int i = 0; i < s; i++) {
 		a = MR_rand(n);
 		printf("%d\n",i);
-		if (Witness(a, n))
+		if (Witness(a, n)) {
+			free(n);
 			return 1;
+		}
+		free(a);
 	}
 	return 0;
 }
@@ -140,13 +152,13 @@ _u8 *MRFakePrime(){
 	return X;
 }
 
-_u8 *Sub(_u8 *A, _u8 *B) {
+_u8 *Sub(_u8 *A, _u8 *B){
 	//A > B; A - B = R;
 	int i, j = 0;
 	char flag = 0;
 	_u8 *R = Ini(A->len);
 	for (i = 0; i < B->len; i++){
-		if (A->data[i] < B->data[i] + flag){
+		if (A->data[i] < B->data[i] + flag) {
 			R->data[i] = (256 - B->data[i] - flag) + A->data[i];
 			flag = 1;
 		}
@@ -199,19 +211,16 @@ _u8 *Mod(_u8* A, _u8* B)
 	_u8 *C, *mB, *temp;
 	int i, j;
 	int Cfirst = A->len - 1, Bfirst = B->len - 1;
-
 	C = Ini(A->len);
 	for (i = 0; i < C->len; i++)
 		C->data[i] = A->data[i];
-
 	while (C->data[Cfirst--] == 0);
 	while (B->data[Bfirst--] == 0);
-
 	Cfirst++, Bfirst++;
-
 	while (Cfirst > Bfirst + 1){
 		mB = Ini(Cfirst);
 		for (i = 0, j = 0; i < Cfirst; i++){
+
 			if (i < Cfirst - 1 - Bfirst)
 				mB->data[i] = 0;
 			else{
@@ -222,7 +231,6 @@ _u8 *Mod(_u8* A, _u8* B)
 		temp = mB;
 		mB = Mul(mB, C->data[i]);
 		free(temp);
-
 		while (Compare(C, mB) != -1){
 			temp = Sub(C, mB);
 			if (Compare(temp, B) == -1){
@@ -238,7 +246,6 @@ _u8 *Mod(_u8* A, _u8* B)
 		Cfirst++;
 		free(mB);
 	}
-
 	while (Compare(C, B) == 1){
 		temp = C;
 		C = Sub(C, B);
@@ -249,8 +256,10 @@ _u8 *Mod(_u8* A, _u8* B)
 		C = Ini(1);
 		C->data[0] = 0;
 	}
+	DelZero(C);
 	return C;
 }
+
 _u8 *Multiplicate(_u8 *A, _u8 *B) {
 	int r = 0, carry = 0;
 	_u8 *R;
@@ -283,12 +292,16 @@ _u8 *Mul(_u8* A, unsigned char B)
 	unsigned int temp;
 	int i;
 	_u8 *C = Ini(A->len + 1);
-	for (i = 0; i < A->len; i++){
+	for (i = 0; i < A->len; i++)
+	{
 		temp = A->data[i] * B + carry;
 		carry = temp / 256;
 		C->data[i] = temp % 256;
 	}
-	C->data[i] = carry;
+	if (carry != 0)
+		C->data[i] = carry;
+	else
+		C->len -= 1;
 	return C;
 }
 factor *RightMove(_u8 *A) {
@@ -317,18 +330,61 @@ factor *RightMove(_u8 *A) {
 	return Rustle;
 }
 _u8 *ModExp(_u8 *a, _u8 *b, _u8 *n) {
-	_u8 *d = Ini(n->len);
+	_u8 *d = Ini(1);
+	_u8 *Temp;
 	int i;
-	for (i = 1; i < d->len; i++)
-		d->data[i] = 0;
 	d->data[0] = 1;
 	for (i = b->len -1; i >=0; i--) {
 		for (int j = 7; j >= 0; j--) {
-			d = Mod(Multiplicate(d, d), n);
-			if (b->data[i] & BitTest[j])
-				d = Mod(Multiplicate(d, a),n);
-			DelZero(d);
+			Temp = Multiplicate(d, d);
+			free(d);
+			d = Mod(Temp, n);
+			free(Temp);
+			if (b->data[i] & BitTest[j]) {
+				Temp = Multiplicate(d, a);
+				free(d);
+				d = Mod(Temp, n);
+				free(Temp);
+			}
 		}	
 	}
 	return d;
+}
+char* Divide_Factor(_u8 *A){
+	_u8  *B, *C, *tA, *temp;
+	int result[60] = { 0 };
+	int i, j, index = 0, count = 0, same_flag = 1;
+	B = Ini(1);
+	tA = Sub(A, B);
+	result[0] = 2;
+	B->data[0] = 2;
+	for (i = 0; i < 302; ){
+		C = Mod(tA, B);
+		if (C->len == 1 && C->data[0] == 0){
+			if (same_flag == 0){
+				index += 2;
+				result[index] = i;
+				result[index + 1]++;
+				for (j = 0; j < B->len; j++)
+					B->data[j] = TestPrime[i];
+			}
+			else{
+				result[index + 1]++;
+				temp = B;
+				B = Mul(B, TestPrime[i]);
+				free(temp);
+			}
+			same_flag = 1;
+		}
+		else{
+			i++;
+			same_flag = 0;
+			for (j = 0; j < B->len; j++)
+				B->data[j] = 0;
+			B->data[0] = TestPrime[i];
+		}
+		free(C);
+	}
+	free(temp);
+	free(B);
 }

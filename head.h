@@ -33,4 +33,5 @@ _u8 *Mod(_u8* A, _u8* B);//模运算
 _u8 *Multiplicate(_u8 *, _u8 *);//大数乘法
 _u8 *Mul(_u8 *, unsigned char);//大数与小数乘法
 _u8 *ModExp(_u8 *, _u8 *, _u8 *);//模幂运算
+char* Divide_Factor(_u8 *A);//质因子分解
 #endif
