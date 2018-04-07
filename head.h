@@ -29,6 +29,7 @@ _u8 *imirPefaFRM(_u8 *);//第二个通过miler-rabin法的伪素数
 
 _u8 *Ini(int);//初始化大数
 int Print(_u8 *);//输出大数
+int PrintPM(_u8 **);//输出密文
 int DelZero(_u8 *);//消去高位的0
 void destroy(_u8 *);//销毁内存
 

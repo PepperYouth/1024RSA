@@ -45,6 +45,13 @@ int Print(_u8 *X) {
 	putchar('\n');
 	return 0;
 }
+int PrintPM(_u8 **P_M) {
+	for (int i = 0; i < P_M[0]->data; i++) {
+		printf("\n%d :\n", i + 1);
+		Print(P_M[i+1]);
+	}
+	return 0;
+}
 int DelZero(_u8 *X) {
 	for (int i = X->len-1; i >= 0; i--) {
 		if (X->data[i] == 0)

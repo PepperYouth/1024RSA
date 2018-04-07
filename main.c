@@ -13,6 +13,9 @@ int main(void) {
 	Q = imirPefaFRM(P);
 	CreatePublic();
 	Print(PublicKey[1]);
+	gets(a);
+	_u8 **P_M=RSAPublic(a, PublicKey);
+	PrintPM(P_M);
 	//CreatePrivate();
 	Destory();
 	while (1);
