@@ -1,28 +1,36 @@
 #include "head.h"
-int TestPrime[303] = {2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 
-37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 
-103, 107, 109, 113, 127, 131, 137, 139, 149, 151, 157, 163, 
+_u8 *P;
+_u8 *Q;
+_u8 *fai;
+_u8 **PublicKey;
+_u8 **PrivateKey;
+void CreatePublic();
+void CreatePrivate();
+_u8 *Fai();
+int TestPrime[303] = {2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31,
+37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101,
+103, 107, 109, 113, 127, 131, 137, 139, 149, 151, 157, 163,
 167, 173, 179, 181, 191, 193, 197, 199, 211, 223, 227, 229,
-233, 239, 241, 251, 257, 263, 269, 271, 277, 281, 283, 293, 
+233, 239, 241, 251, 257, 263, 269, 271, 277, 281, 283, 293,
 307, 311, 313, 317, 331, 337, 347, 349, 353, 359, 367, 373,
-379, 383, 389, 397, 401, 409, 419, 421, 431, 433, 439, 443, 
+379, 383, 389, 397, 401, 409, 419, 421, 431, 433, 439, 443,
 449, 457, 461, 463, 467, 479, 487, 491, 499, 503, 509, 521,
 523, 541, 547, 557, 563, 569, 571, 577, 587, 593, 599, 601,
 607, 613, 617, 619, 631, 641, 643, 647, 653, 659, 661, 673,
 677, 683, 691, 701, 709, 719, 727, 733, 739, 743, 751, 757,
-761, 769, 773, 787, 797, 809, 811, 821, 823, 827, 829, 839, 
+761, 769, 773, 787, 797, 809, 811, 821, 823, 827, 829, 839,
 853, 857, 859, 863, 877, 881, 883, 887, 907, 911, 919, 929,
 937, 941, 947, 953, 967, 971, 977, 983, 991, 997, 1009, 1013,
-1019, 1021, 1031, 1033, 1039, 1049, 1051, 1061, 1063, 1069, 
-1087, 1091, 1093, 1097, 1103, 1109, 1117, 1123, 1129, 1151, 
+1019, 1021, 1031, 1033, 1039, 1049, 1051, 1061, 1063, 1069,
+1087, 1091, 1093, 1097, 1103, 1109, 1117, 1123, 1129, 1151,
 1153, 1163, 1171, 1181, 1187, 1193, 1201, 1213, 1217, 1223,
-1229, 1231, 1237, 1249, 1259, 1277, 1279, 1283, 1289, 1291, 
+1229, 1231, 1237, 1249, 1259, 1277, 1279, 1283, 1289, 1291,
 1297, 1301, 1303, 1307, 1319, 1321, 1327, 1361, 1367, 1373,
-1381, 1399, 1409, 1423, 1427, 1429, 1433, 1439, 1447, 1451, 
+1381, 1399, 1409, 1423, 1427, 1429, 1433, 1439, 1447, 1451,
 1453, 1459, 1471, 1481, 1483, 1487, 1489, 1493, 1499, 1511,
 1523, 1531, 1543, 1549, 1553, 1559, 1567, 1571, 1579, 1583,
-1597, 1601, 1607, 1609, 1613, 1619, 1621, 1627, 1637, 1657, 
-1663, 1667, 1669, 1693, 1697, 1699, 1709, 1721, 1723, 1733, 
+1597, 1601, 1607, 1609, 1613, 1619, 1621, 1627, 1637, 1657,
+1663, 1667, 1669, 1693, 1697, 1699, 1709, 1721, 1723, 1733,
 1741, 1747, 1753, 1759, 1777, 1783, 1787 ,1789, 1801, 1811,
 1823, 1831, 1847, 1861, 1867, 1871, 1873, 1877, 1879, 1889,
 1901, 1907, 1913, 1931, 1933, 1949, 1951, 1973, 1979, 1987, 1993, 1997, 1999, };
@@ -33,10 +41,15 @@ int RealRand(int range) {
 	range = rand() % (range + 1);
 	return range;
 }
-_u8 *Ini(int Len) {
+extern _u8 **PublicKey;
+
+_u8 *Ini() {
 	_u8 *X = (_u8*)malloc(sizeof(_u8));
-	X->len = Len;
-	X->data = (unsigned char*)malloc(Len * sizeof(unsigned char));
+	X->len = LEN;
+	X->sign = 0;
+	X->data = (unsigned char*)malloc(LEN * sizeof(unsigned char));
+	for (int j = 0; j < LEN; j++)
+		X->data[j] = 0;
 	return X;
 }
 int Print(_u8 *X) {
@@ -45,41 +58,30 @@ int Print(_u8 *X) {
 	putchar('\n');
 	return 0;
 }
-int PrintPM(_u8 **P_M) {
-	for (int i = 0; i < P_M[0]->data; i++) {
-		printf("\n%d :\n", i + 1);
-		Print(P_M[i+1]);
-	}
-	return 0;
-}
-int DelZero(_u8 *X) {
-	for (int i = X->len-1; i >= 0; i--) {
-		if (X->len == 1)
-			return 0;
-		if (X->data[i] == 0)
-			X->len--;
-		else
-			return 0;
-	}
-}
 void destroy(_u8 *de){
 	free(de->data);
 	free(de);
 }
-int NoEqualOne(_u8 *X) {
+int EqualOne(_u8 *X) {
+	if (X->sign)
+		return 0;
+    if(X->data[0] != 1)
+        return 0;
 	if (X->data[0] == 1)
 		for (int i = 1; i < X->len; i++)
 			if (X->data[i])
-				return 1;
-	return 0;
+				return 0;
+	return 1;
 }
-int NoEqualN_1(_u8 *X, _u8 *N) {
-	N->data[0]--;
-	for (int i = 0; i < N->len; i++) {
-		if (X->data[i] != N->data[i])
-			return 1;
+int EqualN_1(_u8 *X, _u8 *N) {
+	_u8 *Temp = Ini();
+	Temp->data[0] = 1;
+	_u8 *temp = Sub(N, Temp);
+	destroy(Temp);
+	if (Compare(temp, X) == 0) {
+		destroy(temp);
+		return 1;
 	}
-	N->data[0]++;
 	return 0;
 }
 int EqualZero(_u8 *X) {
@@ -90,9 +92,9 @@ int EqualZero(_u8 *X) {
 }
 
 _u8 *Odd(int range) {
-	_u8 *X = Ini(range);
+	_u8 *X = Ini();
 	X->data[0] = RealRand(127) * 2 + 1;
-	for (int i = 1; i < X->len; i++) {
+	for (int i = 1; i < range; i++) {
 		X->data[i] = RealRand(255);
 	}
 	return X;
@@ -114,27 +116,37 @@ _u8 *FakePrime(int range) {
 	_u8 *X = Odd(range);
 	while (F_P(X))
 		X = Odd(range);
+	X->len = range;
 	return X;
 }
 _u8 *MR_rand(_u8 *N) {
-	_u8 *A = Ini(1 + RealRand(N->len));
+	_u8 *A = Ini();
+	int n = LEN - 1;
 	A->data[0] = 1 + RealRand(254);
-	for (int i = 1; i < A->len; i++)
+	while(N->data[n] == 0)
+		n--;
+	for (int i = 1; i < n; i++)
 		A->data[i] = RealRand(255);
-	if (A->len == N->len && A->data[A->len - 1] >= N->data[N->len - 1])
-		A->data[A->len - 1] = RealRand(N->data[N->len - 1] - 1);
+	A->data[n] = RealRand(N->data[n] - 1);
 	return A;
 }
 int Witness(_u8 *a,_u8 *n) {
-	factor *R = RightMove(n);
+    _u8 *temp = Ini();
+	_u8 *Temp = temp;
+    temp->data[0] = 1;
+    temp = Sub(n, temp);
+	factor *R = RightMove(temp);
+	destroy(temp);
+	destroy(Temp);
+
 	_u8 *X = ModExp(a, R->u, n);
-	_u8 *Y = Ini(X->len);
-	_u8 *Temp;
+	_u8 *Y = NULL;
+
 	for (int i = 0; i < R->t; i++) {
 		Temp = Multiplicate(X, X);
 		Y = Mod(Temp, n);
 		destroy(Temp);
-		if (!NoEqualOne(Y) && NoEqualOne(X) && NoEqualN_1(X, n)) {
+		if ((EqualOne(Y)) && EqualOne(X)==0 && EqualN_1(X, n)==0) {
 			destroy(X);
 			destroy(Y);
 			destroy(R->u);
@@ -142,12 +154,11 @@ int Witness(_u8 *a,_u8 *n) {
 			return 1;
 		}
 		destroy(X);
-		DelZero(Y);
 		X = Y;
 	}
 	destroy(R->u);
 	free(R);
-	if (NoEqualOne(Y))
+	if (EqualOne(Y)==0)
 		return 1;
 	return 0;
 }
@@ -155,7 +166,7 @@ int Miler_Rabin(_u8 *n, int s) {
 	_u8 *a;
 	for (int i = 0; i < s; i++) {
 		a = MR_rand(n);
-		printf("%d\n",i);
+        printf("%d\n",i);
 		if (Witness(a, n)) {
 			destroy(n);
 			return 1;
@@ -165,68 +176,125 @@ int Miler_Rabin(_u8 *n, int s) {
 	return 0;
 }
 _u8 *MRFakePrime(){
-	_u8 *X = FakePrime(32 + RealRand(64));
+	_u8 *X = FakePrime(50);//32 + RealRand(64));
+	int range = X->len;
+	X->len = LEN;
 	while (Miler_Rabin(X, TIME)) {
-		X = FakePrime(32 + RealRand(64));
+		X = FakePrime(50);//32 + RealRand(64));
 	}
+	X->len = range;
 	return X;
 }
 _u8 *imirPefaFRM(_u8 *X) {
-	_u8 *Y = FakePrime(128 - X->len);
+	_u8 *Y = FakePrime(50);//128 - X->len);
 	while (Miler_Rabin(Y, TIME)) {
-		Y = FakePrime(128 - X->len);
+		Y = FakePrime(50);//128 - X->len);
 	}
+	X->len = LEN;
+	Y->len = LEN;
 	return Y;
 }
 
-_u8 *Add(_u8 *A, _u8 *B){
-	//Be sure that A->len >= B->len
-	_u8 *C = Ini(A->len + 1);
-	int i, j = 0, carry = 0;
+_u8 *Add(_u8 *A, _u8 *B) {
+	_u8 *C = Ini();
+	int i, j = 0, carry = 0, sign;
 	unsigned int temp;
+	//Judge the sign
+	if ((A->sign ^ B->sign) == 0)
+		sign = A->sign;
+	else
+		if (A->sign == 1)
+		{
+			A->sign = 0;
+			C = Sub(B, A);
+			A->sign = 1;
+			return C;
+		}
+		else
+		{
+			B->sign = 0;
+			C = Sub(A, B);
+			B->sign = 1;
+			return C;
+		}
 
-	for (i = 0; i < B->len; i++){
+	C = Ini();
+	C->sign = sign;
+	//Calculate
+	for (i = 0; i < B->len; i++) {
 		temp = A->data[i] + B->data[i] + carry;
 		C->data[i] = temp % 256;
 		carry = temp / 256;
 	}
-	for (; i < A->len; i++){
+	for (; i < A->len; i++) {
 
 		temp = A->data[i] + carry;
 		C->data[i] = temp % 256;
 		carry = temp / 256;
 	}
+
 	if (carry != 0)
 		C->data[i] = carry;
-	else
-		C->len -= 1;
 	return C;
 }
-_u8 *Sub(_u8 *A, _u8 *B){
+_u8 *Sub(_u8 *A, _u8 *B) {
 	//A > B; A - B = R;
-	int i, j = 0;
+	int i, j = 0, sign;
 	char flag = 0;
-	_u8 *R = Ini(A->len);
-	for (i = 0; i < B->len; i++){
-		if (A->data[i] < B->data[i] + flag){
+	_u8 *R;
+
+
+	//Judge the sign
+	if ((A->sign ^ B->sign) == 1)
+	{
+		if (A->sign == 1)
+		{
+			A->sign = 0;
+			R = Add(A, B);
+			A->sign = 1;
+			R->sign = 1;
+			return R;
+		}
+		else
+		{
+			B->sign = 0;
+			R = Add(A, B);
+			B->sign = 1;
+			R->sign = 0;
+			return R;
+		}
+	}
+	else
+	{
+		if (Compare(A, B) == -1)
+		{
+			R = Sub(B, A);
+			R->sign = A->sign ^ 1;
+			return R;
+		}
+	}
+
+	R = Ini();
+	for (i = 0; i < B->len; i++) {
+		if (A->data[i] < B->data[i] + flag) {
 			R->data[i] = (256 - B->data[i] - flag) + A->data[i];
 			flag = 1;
 		}
-		else{
+		else {
 			R->data[i] = A->data[i] - B->data[i] - flag;
 			flag = 0;
 		}
 	}
 	for (; i < A->len; i++)
-		if (A->data[i] < flag){
+		if (A->data[i] < flag) {
 			R->data[i] = (256 - flag) + A->data[i];
 			flag = 1;
 		}
-		else{
+		else {
 			R->data[i] = A->data[i] - flag;
 			flag = 0;
 		}
-	return R;
+		return R;
 }
 int Compare(_u8* A, _u8* B)
 {
@@ -261,7 +329,7 @@ _u8 *Mod(_u8* A, _u8* B){
 	int i, j;
 	int Cfirst = A->len - 1, Bfirst = B->len - 1;
 
-	C = Ini(A->len);
+	C = Ini();
 	for (i = 0; i < C->len; i++)
 		C->data[i] = A->data[i];
 
@@ -270,7 +338,7 @@ _u8 *Mod(_u8* A, _u8* B){
 	Cfirst++, Bfirst++;
 
 	while (Cfirst > Bfirst + 1) {
-		mB = Ini(Cfirst);
+		mB = Ini();
 		for (i = 0, j = 0; i < Cfirst; i++) {
 
 			if (i < Cfirst - 1 - Bfirst)
@@ -305,42 +373,29 @@ _u8 *Mod(_u8* A, _u8* B){
 	}
 	if (Compare(C, B) == 0) {
 		destroy(C);
-		C = Ini(1);
+		C = Ini();
 		C->data[0] = 0;
 	}
-	DelZero(C);
 	return C;
 }
 _u8 *Div(_u8 *A, _u8*B){
 	//A/B
-	DelZero(A);
-	DelZero(B);
-	if (A->len < B->len) {
-		_u8 *Temp = Ini(1);
-		Temp->data[0] = 0;
-		return Temp;
-	}
 	_u8 *C, *mB, *temp, *result, *one, *tresult;
 	int i, j, count;
 	int Cfirst = A->len - 1, Bfirst = B->len - 1;
-	printf("A: %d\n", A->len);
-	Print(A);
-	printf("B: %d\n", B->len);
-	Print(B);
-	putchar('\n');
-	C = Ini(A->len);
+	C = Ini();
 	for (i = 0; i < C->len; i++)
 		C->data[i] = A->data[i];
-	result = Ini(A->len);
+	result = Ini();
 	for (i = 0; i < result->len; i++)
 		result->data[i] = 0;
-	one = Ini(1);
+	one = Ini();
 	one->data[0] = 1;
-	while (C->data[Cfirst--] == 0);
-	while (B->data[Bfirst--] == 0);
+	while ((Cfirst >= 0) && C->data[Cfirst--] == 0);
+	while ((Bfirst >= 0) && B->data[Bfirst--] == 0);
 	Cfirst++, Bfirst++;
 	while (Cfirst > Bfirst + 1) {
-		mB = Ini(Cfirst);
+		mB = Ini();
 		for (i = 0, j = 0; i < Cfirst; i++) {
 
 			if (i < Cfirst - 1 - Bfirst)
@@ -354,7 +409,7 @@ _u8 *Div(_u8 *A, _u8*B){
 		mB = Mul(mB, C->data[i]);
 		destroy(temp);
 
-		tresult = Ini(Cfirst);
+		tresult = Ini();
 		for (j = 0; j < tresult->len; j++)
 			tresult->data[j] = 0;
 		tresult->data[Cfirst - Bfirst - 1] = 1;
@@ -381,7 +436,7 @@ _u8 *Div(_u8 *A, _u8*B){
 
 		}
 		destroy(tresult);
-		while (C->data[Cfirst--] == 0);
+		while ((Cfirst >= 0) && C->data[Cfirst--] == 0);
 		Cfirst++;
 		destroy(mB);
 	}
@@ -395,7 +450,7 @@ _u8 *Div(_u8 *A, _u8*B){
 	}
 	if (Compare(C, B) == 0) {
 		destroy(C);
-		C = Ini(1);
+		C = Ini();
 		C->data[0] = 0;
 		temp = result;
 		result = Add(result, one);
@@ -405,17 +460,16 @@ _u8 *Div(_u8 *A, _u8*B){
 }
 _u8 *Multiplicate(_u8 *A, _u8 *B) {
 	if (EqualZero(A) || EqualZero(B)) {
-		_u8 *Temp = Ini(1);
+		_u8 *Temp = Ini();
 		Temp->data[0]=0;
 		return Temp;
 	}
 	int r = 0, carry = 0;
 	_u8 *R;
-	R = Ini(A->len + B->len);
-	for (int i = 0; i < R->len; i++)
-		R->data[i] = 0;
+	R = Ini();
+	R->sign = A->sign^B->sign;
 	for (int i = 0; i < A->len; i++) {
-		for (int j = 0; j < B->len; j++) {
+		for (int j = 0; j < B->len && i + j < LEN; j++) {
 			r = R->data[i + j] + A->data[i] * B->data[j];
 			carry = r / 256;
 			R->data[i + j] = r - carry * 256;
@@ -438,7 +492,7 @@ _u8 *Mul(_u8* A, unsigned char B){
 	unsigned char carry = 0;
 	unsigned int temp;
 	int i;
-	_u8 *C = Ini(A->len + 1);
+	_u8 *C = Ini();
 	for (i = 0; i < A->len; i++){
 		temp = A->data[i] * B + carry;
 		carry = temp / 256;
@@ -446,8 +500,6 @@ _u8 *Mul(_u8* A, unsigned char B){
 	}
 	if (carry != 0)
 		C->data[i] = carry;
-	else
-		C->len -= 1;
 	return C;
 }
 factor *RightMove(_u8 *A){
@@ -461,7 +513,7 @@ factor *RightMove(_u8 *A){
 	while (!(temp & BitTest[j++]))
 		;
 	j--;
-	_u8 *R = Ini(A->len - i);
+	_u8 *R = Ini();
 	r = 8 * i + j;
 	for (; i < A->len - 1; i++){
 		copy = (A->data[i] >> j) + (A->data[i + 1] << (8 - j));
@@ -474,11 +526,13 @@ factor *RightMove(_u8 *A){
 	return Rustle;
 }
 _u8 *ModExp(_u8 *a, _u8 *b, _u8 *n) {
-	_u8 *d = Ini(1);
+	_u8 *d = Ini();
 	_u8 *Temp;
-	int i;
+	int i, N = LEN-1;
 	d->data[0] = 1;
-	for (i = b->len -1; i >=0; i--) {
+	while (b->data[N] == 0)
+		N--;
+	for (i = N; i >=0; i--) {
 		for (int j = 7; j >= 0; j--) {
 			Temp = Multiplicate(d, d);
 			destroy(d);
@@ -490,18 +544,19 @@ _u8 *ModExp(_u8 *a, _u8 *b, _u8 *n) {
 				d = Mod(Temp, n);
 				destroy(Temp);
 			}
-		}	
+		}
 	}
 	return d;
 }
 
 _u8 **ExEuclid(_u8 *e, _u8 *fai) {
 	_u8 *Temp1, *Temp2;
-	_u8 **Rustle = (_u8 **)malloc(2 * sizeof(_u8 *));
+	_u8 **Rustle;
 	if (EqualZero(fai)) {
-		Rustle[0] = Ini(1);
+		Rustle = (_u8 **)malloc(2 * sizeof(_u8 *));
+		Rustle[0] = Ini();
 		Rustle[0]->data[0] = 1;
-		Rustle[1] = Ini(1);
+		Rustle[1] = Ini();
 		Rustle[1]->data[0] = 0;
 		return Rustle;
 	}
@@ -519,15 +574,60 @@ _u8 **ExEuclid(_u8 *e, _u8 *fai) {
 		return Rustle;
 	}
 }
-_u8 **RSAPublic(char *M, _u8 **publickey) {
-	int slen = strlen(M);
-	_u8 **P_M = (_u8**)malloc(slen * sizeof(_u8*) + 1);
-	_u8 *Temp = Ini(1);
-	P_M[0] = Ini(1);
-	P_M[0]->data = slen;
-	for (int i = 0; i < slen; i++) {
-		Temp->data[0] = M[i];
-		P_M[i+1]=ModExp(Temp, publickey[0], publickey[1]);
+void CreatePublic() {
+	PublicKey = (_u8 **)malloc(2 * sizeof(_u8 *));
+	PublicKey[0] = Ini();
+	PublicKey[0]->data[0] = 1;
+	PublicKey[0]->data[1] = 0;
+	PublicKey[0]->data[2] = 1;
+	PublicKey[1] = Multiplicate(P, Q);
+}
+void CreatePrivate() {
+	PrivateKey = (_u8 **)malloc(2 * sizeof(_u8 *));
+	PrivateKey[0] = Ini();
+	PrivateKey[0] = ExEuclid(PublicKey[0], Fai())[0];
+	if (PrivateKey[0]->sign) {
+		_u8 *Temp = Add(PrivateKey[0], fai);
+		destroy(PrivateKey[0]);
+		PrivateKey[0] = Temp;
 	}
-	return P_M;
+	PrivateKey[1] = PublicKey[1];
+}
+_u8 *Fai() {
+	_u8 *Temp = Ini();
+	_u8 *Temp2;
+	Temp2 = P;
+	Temp->data[0] = 1;
+	P = Sub(Temp2, Temp);
+
+	Temp2 = Q;
+	Q = Sub(Temp2, Temp);
+	destroy(Temp);
+	fai = Multiplicate(P, Q);
+	return fai;
+}
+void Destory() {
+	destroy(P);
+	destroy(Q);
+	destroy(PublicKey[0]);
+	destroy(PublicKey[1]);
+	free(PublicKey);
+	destroy(PrivateKey[0]);
+	free(PrivateKey);
+}
+_u8 *PM(char *m) {
+	_u8 *M = Ini();
+	for (int i = 0; i < strlen(m); i++) {
+		M->data[i] = m[i];
+	}
+	_u8 *pm = ModExp(M, PublicKey[0], PublicKey[1]);
+	return pm;
+}
+char *SC(_u8 *c) {
+	_u8 *sc = ModExp(c, PrivateKey[0], PrivateKey[1]);
+	char *SC = (char *)malloc(LEN * sizeof(char));
+	for (int i = 0; i < LEN; i++) {
+		SC[i] = sc->data[i];
+	}
+	return SC;
 }
